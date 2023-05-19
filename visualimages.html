@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html>
 <head>
   <title>Charts</title>
@@ -10,6 +9,7 @@
   <canvas id="onTimeChart"></canvas>
   <canvas id="offTimeChart"></canvas>
   <canvas id="totalRotationsChart"></canvas>
+  <canvas id="rpmChart"></canvas>
 
   <script>
     // Chart data URL
@@ -19,8 +19,12 @@
     function generateCharts(datapoints) {
       // Extracting data for each Device_id
       let deviceData = {};
+      let timeLabels = [];
+      
       for (let i = 0; i < datapoints.length; i++) {
         const deviceID = datapoints[i].Device_id;
+        const time = datapoints[i].time;
+
         if (!deviceData[deviceID]) {
           deviceData[deviceID] = {
             RPM: [],
@@ -29,6 +33,11 @@
             Total_rotations: [],
           };
         }
+
+        if (!timeLabels.includes(time)) {
+          timeLabels.push(time);
+        }
+
         deviceData[deviceID].RPM.push(parseFloat(datapoints[i].RPM));
         deviceData[deviceID].On_time.push(parseFloat(datapoints[i].On_time));
         deviceData[deviceID].Off_time.push(parseFloat(datapoints[i].Off_time));
@@ -117,6 +126,30 @@
             borderColor: 'rgba(153, 102, 255, 1)',
             borderWidth: 1
           }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+
+      // Generate chart for RPM against time for each device
+      const rpmCanvas = document.getElementById('rpmChart');
+      new Chart(rpmCanvas, {
+        type: 'line',
+        data: {
+          labels: timeLabels,
+          datasets: Object.keys(deviceData).map((deviceID, index) => ({
+            label: `Device ${deviceID} RPM`,
+            data: deviceData[deviceID].RPM,
+            backgroundColor: `rgba(255, ${index * 50}, 0, 0.2)`,
+            borderColor: `rgba(255, ${index * 50}, 0, 1)`,
+            borderWidth: 1,
+            fill: false
+          }))
         },
         options: {
           scales: {
