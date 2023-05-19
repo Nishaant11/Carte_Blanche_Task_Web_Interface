@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Charts</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+</head>
+<body>
+  <canvas id="avgRpmChart"></canvas>
+  <canvas id="onTimeChart"></canvas>
+  <canvas id="offTimeChart"></canvas>
+  <canvas id="totalRotationsChart"></canvas>
+
+  <script>
+    // Chart data URL
+    let chartData = "./DataSet1.csv";
+
+    // Function to generate charts
+    function generateCharts(datapoints) {
+      // Extracting data for each Device_id
+      let deviceData = {};
+      for (let i = 0; i < datapoints.length; i++) {
+        const deviceID = datapoints[i].Device_id;
+        if (!deviceData[deviceID]) {
+          deviceData[deviceID] = {
+            RPM: [],
+            On_time: [],
+            Off_time: [],
+            Total_rotations: [],
+          };
+        }
+        deviceData[deviceID].RPM.push(parseFloat(datapoints[i].RPM));
+        deviceData[deviceID].On_time.push(parseFloat(datapoints[i].On_time));
+        deviceData[deviceID].Off_time.push(parseFloat(datapoints[i].Off_time));
+        deviceData[deviceID].Total_rotations.push(parseFloat(datapoints[i].Total_rotations));
+      }
+
+      // Generate chart for Average RPM
+      const avgRpmCanvas = document.getElementById('avgRpmChart');
+      new Chart(avgRpmCanvas, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(deviceData),
+          datasets: [{
+            label: 'Average RPM',
+            data: Object.values(deviceData).map(data => calculateAverage(data.RPM)),
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+
+      // Generate chart for On_time (maximum value)
+      const onTimeCanvas = document.getElementById('onTimeChart');
+      new Chart(onTimeCanvas, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(deviceData),
+          datasets: [{
+            label: 'On Time (Max)',
+            data: Object.values(deviceData).map(data => calculateMax(data.On_time)),
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+
+      // Generate chart for Off_time (maximum value)
+      const offTimeCanvas = document.getElementById('offTimeChart');
+      new Chart(offTimeCanvas, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(deviceData),
+          datasets: [{
+            label: 'Off Time (Max)',
+            data: Object.values(deviceData).map(data => calculateMax(data.Off_time)),
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+
+      // Generate chart for Total_rotations (maximum value)
+      const totalRotationsCanvas = document.getElementById('totalRotationsChart');
+      new Chart(totalRotationsCanvas, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(deviceData),
+          datasets: [{
+            label: 'Total Rotations (Max)',
+            data: Object.values(deviceData).map(data => calculateMax(data.Total_rotations)),
+            backgroundColor: 'rgba(153, 102, 255, 0.2)',
+            borderColor: 'rgba(153, 102, 255, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+    // Calculate average of an array
+    function calculateAverage(arr) {
+      return arr.reduce((a, b) => a + b, 0) / arr.length;
+    }
+
+    // Calculate maximum value of an array
+    function calculateMax(arr) {
+      return Math.max(...arr);
+    }
+
+    // Load CSV data and generate charts
+    document.addEventListener("DOMContentLoaded", function() {
+      console.log("DOMContentLoaded event triggered");
+      Papa.parse(chartData, {
+        download: true,
+        header: true,
+        complete: function(results) {
+          generateCharts(results.data);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
